@@ -59,6 +59,7 @@ class CalDAVClient {
   protected $body = "";
   protected $requestMethod = "GET";
   protected $httpRequest = "";  // for debugging http headers sent
+  protected $httpResponseHeaders = "";  // for debugging http headers sent
   protected $xmlRequest = "";   // for debugging xml sent
   protected $httpResponse = ""; // http headers received
   protected $xmlResponse = "";  // xml received
@@ -148,9 +149,8 @@ class CalDAVClient {
       // Clean headers
       $this->headers = array();
       $dav_options = $this->DoOptionsRequestAndGetDAVHeader();
-      $valid_caldav_server = isset($dav_options['calendar-access']);
 
-      return $valid_caldav_server;
+      return isset($dav_options['calendar-access']);
   }
 
   /**
@@ -1070,7 +1070,7 @@ EOFILTER;
    *
    * @param string    $href         The href from a call to GetEvents or GetTodos etc.
    *
-   * @return string The iCalendar of the calendar entry
+   * @return array The iCalendar of the calendar entry
    */
   function GetEntryByHref( $href ) {
       //$href = str_replace( rawurlencode('/'),'/',rawurlencode($href));

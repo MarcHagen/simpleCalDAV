@@ -45,11 +45,18 @@ namespace SimpleCalDAV;
 
 use SimpleCalDAV\CalDAVClient;
 use SimpleCalDAV\CalDAVException;
+use SimpleCalDAV\CalDAVException;
+use SimpleCalDAV\CalDAVException;
+use SimpleCalDAV\CalDAVException;
+use SimpleCalDAV\CalDAVException;
+use SimpleCalDAV\CalDAVException;
 use SimpleCalDAV\CalDAVFilter;
+use SimpleCalDAV\CalDAVObject;
 use SimpleCalDAV\CalDAVObject;
 
 class SimpleCalDAVClient {
 
+    /** @var CalDAVClient */
     private $client;
     private $url;
 
@@ -58,9 +65,9 @@ class SimpleCalDAVClient {
      * Connects to a CalDAV-Server.
      *
      * Arguments:
-     * @param $url URL to the CalDAV-server. E.g. http://exam.pl/baikal/cal.php/username/calendername/
-     * @param $user Username to login with
-     * @param $pass Password to login with
+     * @param string $url URL to the CalDAV-server. E.g. http://exam.pl/baikal/cal.php/username/calendername/
+     * @param string $user Username to login with
+     * @param string $pass Password to login with
      *
      * Debugging:
      * @throws CalDAVException
@@ -116,15 +123,15 @@ class SimpleCalDAVClient {
      * Requests a list of all accessible calendars on the server
      *
      * Return value:
-     * @return an array of CalDAVCalendar-Objects (see CalDAVCalendar.php), representing all calendars accessible by the current principal (user).
+     * @return array|CalDAVCalendar[] an array of CalDAVCalendar-Objects (see CalDAVCalendar.php), representing all calendars accessible by the current principal (user).
      *
      * Debugging:
-     * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function findCalendars()
     {
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
 
         return $this->client->FindCalendars(true);
     }
@@ -135,12 +142,12 @@ class SimpleCalDAVClient {
      * Sets the actual calendar to work with
      *
      * Debugging:
-     * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function setCalendar ( CalDAVCalendar $calendar )
     {
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
 
         $this->client->SetCalendar($this->client->first_url_part.$calendar->getURL());
 
@@ -158,20 +165,21 @@ class SimpleCalDAVClient {
      *           	Notice: The iCalendar-data contains the unique ID which specifies where the event is being saved.
      *
      * Return value:
-     * @return An CalDAVObject-representation (see CalDAVObject.php) of your created resource
+     * @return CalDAVObject An CalDAVObject-representation (see CalDAVObject.php) of your created resource
      *
      * Debugging:
      * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function create ( $cal )
     {
         // Connection and calendar set?
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
-        if(!isset($this->client->calendar_url)) throw new Exception('No calendar selected. Try findCalendars() and setCalendar().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
+        if(!isset($this->client->calendar_url)) throw new \Exception('No calendar selected. Try findCalendars() and setCalendar().');
 
         // Parse $cal for UID
-        if (! preg_match( '#^UID:(.*?)\r?\n?$#m', $cal, $matches ) ) { throw new Exception('Can\'t find UID in $cal'); }
+        if (! preg_match( '#^UID:(.*?)\r?\n?$#m', $cal, $matches ) ) { throw new CalDAVException('Can\'t find UID in $cal', $this->client); }
         else { $uid = $matches[1]; }
 
         // Does $this->url.$uid.'.ics' already exist?
@@ -205,22 +213,23 @@ class SimpleCalDAVClient {
      * Changes a calendar resource (event, todo, etc.) on the CalDAV-Server.
      *
      * Arguments:
-     * @param $href See CalDAVObject.php
-     * @param $cal The new iCalendar-data that should be used to overwrite the old one.
-     * @param $etag See CalDAVObject.php
+     * @param string $href See CalDAVObject.php
+     * @param string $cal The new iCalendar-data that should be used to overwrite the old one.
+     * @param string $etag See CalDAVObject.php
      *
      * Return value:
-     * @return An CalDAVObject-representation (see CalDAVObject.php) of your changed resource
+     * @return CalDAVObject An CalDAVObject-representation (see CalDAVObject.php) of your changed resource
      *
      * Debugging:
      * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function change ( $href, $new_data, $etag )
     {
         // Connection and calendar set?
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
-        if(!isset($this->client->calendar_url)) throw new Exception('No calendar selected. Try findCalendars() and setCalendar().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
+        if(!isset($this->client->calendar_url)) throw new \Exception('No calendar selected. Try findCalendars() and setCalendar().');
 
         // Does $href exist?
         $result = $this->client->GetEntryByHref($href);
@@ -248,18 +257,19 @@ class SimpleCalDAVClient {
      * Delets an event or a TODO from the CalDAV-Server.
      *
      * Arguments:
-     * @param $href See CalDAVObject.php
-     * @param $etag See CalDAVObject.php
+     * @param string $href See CalDAVObject.php
+     * @param string $etag See CalDAVObject.php
      *
      * Debugging:
      * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function delete ( $href, $etag )
     {
         // Connection and calendar set?
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
-        if(!isset($this->client->calendar_url)) throw new Exception('No calendar selected. Try findCalendars() and setCalendar().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
+        if(!isset($this->client->calendar_url)) throw new \Exception('No calendar selected. Try findCalendars() and setCalendar().');
 
         // Does $href exist?
         $result = $this->client->GetEntryByHref($href);
@@ -283,23 +293,24 @@ class SimpleCalDAVClient {
      * Gets a all events from the CalDAV-Server which lie in a defined time interval.
      *
      * Arguments:
-     * @param $start The starting point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
+     * @param string $start The starting point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
      *           		GMT. If omitted the value is set to -infinity.
-     * @param $end The end point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
+     * @param string $end The end point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
      *           		GMT. If omitted the value is set to +infinity.
      *
      * Return value:
-     * @return an array of CalDAVObjects (See CalDAVObject.php), representing the found events.
+     * @return array|CalDAVObject[] an array of CalDAVObjects (See CalDAVObject.php), representing the found events.
      *
      * Debugging:
      * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function getEvents ( $start = null, $end = null )
     {
         // Connection and calendar set?
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
-        if(!isset($this->client->calendar_url)) throw new Exception('No calendar selected. Try findCalendars() and setCalendar().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
+        if(!isset($this->client->calendar_url)) throw new \Exception('No calendar selected. Try findCalendars() and setCalendar().');
 
         // Are $start and $end in the correct format?
         if ( ( isset($start) and ! preg_match( '#^\d\d\d\d\d\d\d\dT\d\d\d\d\d\dZ$#', $start, $matches ) )
@@ -328,25 +339,26 @@ class SimpleCalDAVClient {
      * given criteria.
      *
      * Arguments:
-     * @param $start The starting point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
+     * @param string $start The starting point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
      *              	GMT. If omitted the value is set to -infinity.
-     * @param $end The end point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
+     * @param string $end The end point of the time interval. Must be in the format yyyymmddThhmmssZ and should be in
      *              	GMT. If omitted the value is set to +infinity.
-     * @param $complete Filter for completed tasks (true) or for uncompleted tasks (false). If omitted, the function will return both.
-     * @param $cancelled Filter for cancelled tasks (true) or for uncancelled tasks (false). If omitted, the function will return both.
+     * @param bool $complete Filter for completed tasks (true) or for uncompleted tasks (false). If omitted, the function will return both.
+     * @param bool $cancelled Filter for cancelled tasks (true) or for uncancelled tasks (false). If omitted, the function will return both.
      *
      * Return value:
-     * @return an array of CalDAVObjects (See CalDAVObject.php), representing the found TODOs.
+     * @return array|CalDAVObject[] an array of CalDAVObjects (See CalDAVObject.php), representing the found TODOs.
      *
      * Debugging:
      * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function getTODOs ( $start = null, $end = null, $completed = null, $cancelled = null )
     {
         // Connection and calendar set?
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
-        if(!isset($this->client->calendar_url)) throw new Exception('No calendar selected. Try findCalendars() and setCalendar().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
+        if(!isset($this->client->calendar_url)) throw new \Exception('No calendar selected. Try findCalendars() and setCalendar().');
 
         // Are $start and $end in the correct format?
         if ( ( isset($start) and ! preg_match( '#^\d\d\d\d\d\d\d\dT\d\d\d\d\d\dZ$#', $start, $matches ) )
@@ -379,20 +391,21 @@ class SimpleCalDAVClient {
      * See http://www.rfcreader.com/#rfc4791_line1524 for more information about how to write filters on your own.
      *
      * Arguments:
-     * @param $filterXML The stuff, you want to send encapsulated in the <C:filter>-tag.
+     * @param string $filterXML The stuff, you want to send encapsulated in the <C:filter>-tag.
      *
      * Return value:
-     * @return an array of CalDAVObjects (See CalDAVObject.php), representing the found calendar resources.
+     * @return array|CalDAVObject[] an array of CalDAVObjects (See CalDAVObject.php), representing the found calendar resources.
      *
      * Debugging:
      * @throws CalDAVException
+     * @throws \Exception
      * For debugging purposes, just sorround everything with try { ... } catch (Exception $e) { echo $e->__toString(); exit(-1); }
      */
     function getCustomReport ( $filterXML )
     {
         // Connection and calendar set?
-        if(!isset($this->client)) throw new Exception('No connection. Try connect().');
-        if(!isset($this->client->calendar_url)) throw new Exception('No calendar selected. Try findCalendars() and setCalendar().');
+        if(!isset($this->client)) throw new \Exception('No connection. Try connect().');
+        if(!isset($this->client->calendar_url)) throw new \Exception('No calendar selected. Try findCalendars() and setCalendar().');
 
         // Get report!
         $this->client->SetDepth('1');
@@ -415,8 +428,11 @@ class SimpleCalDAVClient {
 
     /**
      * getFreeBusyReport
-     * @param {String} $start
-     * @param {String} $start
+     *
+     * @param string $start
+     * @param string $end
+     *
+     * @return string
      */
     function getFreeBusyReport($start, $end) {
         $xml = <<<XML
