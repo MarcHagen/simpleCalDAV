@@ -60,6 +60,7 @@ class CalDAVClient {
   protected $requestMethod = "GET";
   protected $httpRequest = "";  // for debugging http headers sent
   protected $httpResponseHeaders = "";  // for debugging http headers sent
+  protected $httpResponseBody = "";  // for debugging http headers sent
   protected $xmlRequest = "";   // for debugging xml sent
   protected $httpResponse = ""; // http headers received
   protected $xmlResponse = "";  // xml received
