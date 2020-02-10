@@ -60,7 +60,7 @@ class CalDAVException extends Exception {
 		
     	$string .= $this->responseHeader;
     	
-    if(!empty($this->responseBody)) {
+        if(!empty($this->responseBody)) {
             if(!preg_match( '#^Content-type:.*?text/calendar.*?$#', $this->responseHeader, $matches)) {
                     $dom->loadXML($this->responseBody);
                     $string .= htmlentities($dom->saveXml());
@@ -74,7 +74,7 @@ class CalDAVException extends Exception {
     	$string .= 'Trace:<br><br>'.$this->getTraceAsString();
     
     	$string .= '</pre>';
-    	
+
     	return $string;
     }
     

@@ -69,7 +69,6 @@ class SimpleCalDAVClient {
      */
     function connect ( $url, $user, $pass )
     {
-
         //  Connect to CalDAV-Server and log in
         $client = new CalDAVClient($url, $user, $pass);
 
@@ -193,10 +192,7 @@ class SimpleCalDAVClient {
                 throw new CalDAVException( $this->url.$uid.'.ics already existed. Entry has been overwritten.', $this->client);
             }
 
-            else // Unknown status
-            {
-                throw new CalDAVException('Recieved unknown HTTP status', $this->client);
-            }
+            throw new CalDAVException('Recieved unknown HTTP status', $this->client);
         }
 
         return new CalDAVObject($this->url.$uid.'.ics', $cal, $newEtag);
