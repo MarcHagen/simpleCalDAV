@@ -45,13 +45,7 @@ namespace SimpleCalDAV;
 
 use SimpleCalDAV\CalDAVClient;
 use SimpleCalDAV\CalDAVException;
-use SimpleCalDAV\CalDAVException;
-use SimpleCalDAV\CalDAVException;
-use SimpleCalDAV\CalDAVException;
-use SimpleCalDAV\CalDAVException;
-use SimpleCalDAV\CalDAVException;
 use SimpleCalDAV\CalDAVFilter;
-use SimpleCalDAV\CalDAVObject;
 use SimpleCalDAV\CalDAVObject;
 
 class SimpleCalDAVClient {
