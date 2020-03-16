@@ -12,7 +12,6 @@
 
 namespace SimpleCalDAV;
 
-use SimpleCalDAV\CalDAVCalendar;
 use SimpleCalDAV\Lib\XMLDocument;
 use SimpleCalDAV\Lib\XMLElement;
 
@@ -92,60 +91,60 @@ class CalDAVClient {
    *
    *  $options['timeout'] : Timeout in seconds
    */
+    // TODO: proxy options, interface used,
+    function __construct($base_url, $user, $pass, $options = [])
+    {
+        $this->user    = $user;
+        $this->pass    = $pass;
+        $this->headers = [];
 
-  // TODO: proxy options, interface used,
-  function __construct( $base_url, $user, $pass, $options = array()) {
-      $this->user = $user;
-      $this->pass = $pass;
-      $this->headers = array();
+        if (preg_match('#^((https?)://([a-z0-9.-]+)(:([0-9]+))?)(/.*)$#', $base_url, $matches)) {
+            $this->server   = $matches[3];
+            $this->base_url = $matches[6];
+            if ($matches[2] == 'https') {
+                $this->protocol = 'ssl';
+                $this->port     = 443;
+            } else {
+                $this->protocol = 'tcp';
+                $this->port     = 80;
+            }
+            if ($matches[4] != '') {
+                $this->port = intval($matches[5]);
+            }
+        } else {
+            trigger_error("Invalid URL: '" . $base_url . "'", E_USER_ERROR);
+        }
 
-      if ( preg_match( '#^((https?)://([a-z0-9.-]+)(:([0-9]+))?)(/.*)$#', $base_url, $matches ) ) {
-          $this->server = $matches[3];
-          $this->base_url = $matches[6];
-          if ( $matches[2] == 'https' ) {
-              $this->protocol = 'ssl';
-              $this->port = 443;
-          }
-          else {
-              $this->protocol = 'tcp';
-              $this->port = 80;
-          }
-          if ( $matches[4] != '' ) {
-              $this->port = intval($matches[5]);
-          }
-      } else {
-          trigger_error("Invalid URL: '".$base_url."'", E_USER_ERROR);
-      }
+        $this->timeout = isset($options['timeout']) ? $options['timeout'] : 10;
+        $this->ch      = curl_init();
+        curl_setopt_array(
+            $this->ch,
+            [
+                CURLOPT_CONNECTTIMEOUT => $this->timeout,
+                CURLOPT_FAILONERROR    => false,
+                CURLOPT_MAXREDIRS      => 2,
+                CURLOPT_FORBID_REUSE   => false,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                CURLOPT_HTTPAUTH       => isset($options['auth']) ? $options['auth'] : (CURLAUTH_BASIC | CURLAUTH_DIGEST),
+                CURLOPT_USERAGENT      => 'cURL based CalDAV client',
+                CURLINFO_HEADER_OUT    => true,
+                CURLOPT_HEADER         => true,
+                //CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_FOLLOWLOCATION => true,
+            ]
+        );
+        if (curl_version()['version'] >= 7.68 && phpversion() >= '7.4.3')
+            curl_setopt($this->ch, CURLOPT_HTTP09_ALLOWED, true);
 
-      $this->timeout = isset($options['timeout']) ? 
-          $options['timeout'] : 10;
-      $this->ch = curl_init();
-      curl_setopt_array($this->ch, array(
-        CURLOPT_CONNECTTIMEOUT => $this->timeout,
-        CURLOPT_FAILONERROR => FALSE,
-        CURLOPT_MAXREDIRS => 2,
-        CURLOPT_FORBID_REUSE => FALSE,
-        CURLOPT_RETURNTRANSFER => TRUE,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_HTTPAUTH =>
-        isset($options['auth']) ?  $options['auth'] :
-        (CURLAUTH_BASIC | CURLAUTH_DIGEST),
-        CURLOPT_USERAGENT => 'cURL based CalDAV client',
-        CURLINFO_HEADER_OUT => TRUE,
-        CURLOPT_HEADER => TRUE,
-        CURLOPT_SSL_VERIFYPEER => FALSE
-    ));
+        $this->full_url       = $base_url;
+        $this->first_url_part = $matches[1];
+    }
 
-      $this->full_url = $base_url;
-      $this->first_url_part = $matches[1];
-  }
-
-  /**
-   * Check with OPTIONS if calendar-access is enabled
-   * 
-   * Can be used to check authentication against server
-   *
-   */
+    /**
+     * Check with OPTIONS if calendar-access is enabled
+     * Can be used to check authentication against server
+     */
   function isValidCalDAVServer() {
       // Clean headers
       $this->headers = array();
@@ -283,7 +282,7 @@ class CalDAVClient {
   /**
    * Output http request headers
    *
-   * @return HTTP headers
+   * @return string HTTP headers
    */
   function GetHttpRequest() {
       return $this->httpRequest;
@@ -291,7 +290,7 @@ class CalDAVClient {
   /**
    * Output http response headers
    *
-   * @return HTTP headers
+   * @return string HTTP headers
    */
   function GetResponseHeaders() {
       return $this->httpResponseHeaders;
@@ -299,7 +298,7 @@ class CalDAVClient {
   /**
    * Output http response body
    *
-   * @return HTTP body
+   * @return string HTTP body
    */
   function GetResponseBody() {
       return $this->httpResponseBody;
@@ -307,7 +306,7 @@ class CalDAVClient {
   /**
    * Output request body
    *
-   * @return raw xml
+   * @return string raw xml
    */
   function GetBody() {
       return $this->body;
@@ -315,7 +314,7 @@ class CalDAVClient {
   /**
    * Output xml response
    *
-   * @return raw xml
+   * @return string raw xml
    */
   function GetXmlResponse() {
       return $this->xmlResponse;
@@ -360,11 +359,9 @@ class CalDAVClient {
 
       // Remove cURL generated 'Expect: 100-continue'
       $this->headers['disable_expect'] = 'Expect:';
-      curl_setopt($this->ch, CURLOPT_HTTPHEADER,
-              array_values($this->headers));
+      curl_setopt($this->ch, CURLOPT_HTTPHEADER, array_values($this->headers));
 			  
-      curl_setopt($this->ch, CURLOPT_USERPWD, $this->user . ':' .
-              $this->pass);
+      curl_setopt($this->ch, CURLOPT_USERPWD, $this->user . ':' . $this->pass);
 
       // Request body
       curl_setopt($this->ch, CURLOPT_POSTFIELDS, $this->body);
@@ -378,10 +375,9 @@ class CalDAVClient {
           log_message('ERROR', 'Error requesting ' . $url . ': ' . curl_error($this->ch));
           return false;
       }
-
       $info = curl_getinfo($this->ch);
-	  
-	  // Save request
+
+      // Save request
 	  $this->httpRequest = $info['request_header'];
 
       // Get headers (idea from SabreDAV WebDAV client)
@@ -405,7 +401,6 @@ class CalDAVClient {
       log_message('INTERNALS', 'RPLh: ' . var_export($this->httpResponseHeaders, TRUE));
       log_message('INTERNALS', 'RPLb: ' . var_export($this->httpResponseBody, TRUE));
       */
-
       return $response;
   }
 
@@ -487,6 +482,10 @@ class CalDAVClient {
       }
       $this->SetContentType('text/calendar; encoding="utf-8"');
       $this->DoRequest($url);
+
+      if ( $this->GetHttpResultCode() != '201' ) {
+          return null;
+      }
 
       $etag = null;
       if ( preg_match( '{^ETag:\s+"([^"]*)"\s*$}im', $this->httpResponseHeaders, $matches ) ) $etag = $matches[1];
