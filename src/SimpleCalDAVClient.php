@@ -154,7 +154,7 @@ class SimpleCalDAVClient {
      * Creates a new calendar resource on the CalDAV-Server (event, todo, etc.).
      *
      * Arguments:
-     * @param $cal iCalendar-data of the resource you want to create.
+     * @param string $cal iCalendar-data of the resource you want to create.
      *           	Notice: The iCalendar-data contains the unique ID which specifies where the event is being saved.
      *
      * Return value:
@@ -193,6 +193,13 @@ class SimpleCalDAVClient {
             }
 
             throw new CalDAVException('Recieved unknown HTTP status', $this->client);
+        }
+        else if ($newEtag === null) {
+            if (strpos('X-Sabre-Ew-Gross', $this->client->GetResponseHeaders()) !== false) {
+                throw new CalDAVException('iCalendar validation warning... Please investigate!!!', $this->client);
+            }
+
+            throw new CalDAVException('etag was null, but request succeeded?', $this->client);
         }
 
         return new CalDAVObject($this->url.$uid.'.ics', $cal, $newEtag);
@@ -263,10 +270,10 @@ class SimpleCalDAVClient {
 
         // Does $href exist?
         $result = $this->client->GetEntryByHref($href);
-        if(count($result) == 0) throw new CalDAVException('Can\'t find '.$href.'on server', $this->client);
+        if(count($result) == 0) throw new CalDAVException('Can\'t find "'.$href.'" on server', $this->client);
 
         // $etag correct?
-        if($result[0]['etag'] != $etag) { throw new CalDAVException('Wrong entity tag. The entity seems to have changed.', $this->client); }
+        if($result[0]['etag'] != $etag) { throw new CalDAVException('Wrong etag. The entity seems to have changed ??.', $this->client); }
 
         // Do the deletion
         $this->client->DoDELETERequest($href, $etag);
